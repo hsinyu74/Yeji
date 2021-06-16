@@ -1,5 +1,7 @@
 from flask import Flask, request, abort
 
+from translate import Translator
+
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -16,6 +18,12 @@ app = Flask(__name__)
 line_bot_api = LineBotApi('UixFncuOGHnCLGppaaAfAw+iyhCZsBAIu7FOAY2yMdsPTVQSK+kMrN7wNiBSZnIgKsgocsG6Z+ez4AlpIbxi/X1WdorF40OeB+zdkBf3RGzfSnJ+1qXb268NytL2J4yBV1h5IacPEm1rlpNESmFE5QdB04t89/1O/w1cDnyilFU=')
 # Channel Secret
 handler = WebhookHandler('93ee5830c1026467b3a3a46f6f228118')
+
+
+
+
+#translator = Translator (from_lang='zh-Hant', to_lang='en')
+lang='en'
 
 
 # 監聽所有來自 /callback 的 Post Request
@@ -38,24 +46,22 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-
-    text=event.message.text
-
-    if (text=="Hi"):
-        reply_text = "Hello"
-    elif(text=="你好"):
-        reply_text = "哈囉"
-    elif(text=="機器人"):
-        reply_text = "叫我嗎"
+    global lang
+    if event.message.text == "中翻英":
+        msg = TextSendMessage(text = '語言設定為英文') 
+        lang = 'en'
+    elif event.message.text == "中翻日":
+        msg =  TextSendMessage(text = '語言設定為日文')
+        lang='ja'
     else:
-        reply_text = text
-#如果非以上的選項，就會學你說話
+        translator = Translator (from_lang='zh-Hant', to_lang=lang)
+        msg =  TextSendMessage(text = translator.translate(event.message.text))     
+    line_bot_api.reply_message(event.reply_token, msg)
 
-    message = TextSendMessage(reply_text)
-    line_bot_api.reply_message(event.reply_token, message)
 
-   
 
+
+# requirements.txt 中要加入 translate , 也就是要 pip install traslate
 import os
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
